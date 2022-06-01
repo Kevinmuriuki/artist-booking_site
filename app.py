@@ -43,7 +43,7 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
     website_link = db.Column(db.String(120))
     talent = db.Column(db.Boolean, default=False)
-    description = db.Column(db.String(), )
+    description = db.Column(db.String(500))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -58,7 +58,9 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-
+    website_link = db.Column(db.String(120))
+    venues = db.Column(db.Boolean, default=False)
+    description = db.Column(db.String(500))
 
   # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
