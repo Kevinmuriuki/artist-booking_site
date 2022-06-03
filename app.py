@@ -2,6 +2,7 @@
 # Imports
 #----------------------------------------------------------------------------#
 
+from email.policy import default
 import json
 import dateutil.parser
 import babel
@@ -44,6 +45,11 @@ class Venue(db.Model):
     website_link = db.Column(db.String(120))
     talent = db.Column(db.Boolean, default=False)
     description = db.Column(db.String(500))
+    upcoming_shows_count = db.Column(db.Integer, default=0)
+    shows_count = db.Column(db.Integer, default=0)
+    shows = db.relationship('Show',backref='venue',lazy=True, cascade="save-update, merge, delete")
+
+
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -61,8 +67,20 @@ class Artist(db.Model):
     website_link = db.Column(db.String(120))
     venues = db.Column(db.Boolean, default=False)
     description = db.Column(db.String(500))
+    upcoming_shows_count = db.Column(db.Integer, default=0)
+    shows_count = db.Column(db.Integer, default=0)
+    shows = db.relationship('Show',backref='venue',lazy=True, cascade="save-update, merge, delete")
 
   # TODO: implement any missing fields, as a database migration using Flask-Migrate
+
+class Show(db.Model):
+    _tablename__ = 'shows'
+
+    id = db.Column(db.Integer, primary_key=True)
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+    start_time = db.Column(db.DateTime)
+
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
