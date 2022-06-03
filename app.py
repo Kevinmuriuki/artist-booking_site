@@ -139,15 +139,19 @@ def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+  results = Venue.query.filter(Venue.name.ilike('%{}%'.format(request.form['search_venues']))).all()
   response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }
-  return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
+    "count": len(results),
+    "data": []
+    }
+  for venue in results:
+    response["data"].append({
+        "id": venue.id,
+        "name": venue.name,
+        "num_upcoming_shows": venue.upcoming_shows_count
+      })
+  
+  return render_template('pages/search_venues.html', results=response, search_venues=request.form.get('search_venues', ''))
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
@@ -180,7 +184,7 @@ def show_venue(venue_id):
     "image_link": venue.image_link,
     "facebook_link": venue.facebook_link,
     "website_link": venue.website_link,
-    "stalent": venue.talent,
+    "talent": venue.talent,
     "description": venue.description,
     "past_shows": past_shows,
     "upcoming_shows": upcoming_shows,
@@ -201,13 +205,33 @@ def create_venue_form():
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+  new_venue = Venue()
+  new_venue.name = request.form['name']
+  new_venue.city = request.form['city']
+  new_venue.state = request.form['state']
+  new_venue.address = request.form['address']
+  new_venue.phone = request.form['phone']
+  new_venue.genres = request.form['genres']
+  new_venue.image_link = request.form['image_link']
+  new_venue.facebook_link = request.form['facebook_link']
+  new_venue.website = request.form['website_link']
+  new_venue.seeking_talent = request.form['seeking_talent']
+  new_venue.seeking_description = request.form['seeking_description']
 
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+  try:
+    db.session.add(new_venue)
+    db.session.commit()
+    # on successful db insert, flash success
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  except:
+    db.session.rollback()
+    # TODO: on unsuccessful db insert, flash an error instead.
+    # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+    flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+  finally:
+    db.session.close()
+  return redirect(url_for('index'))
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
