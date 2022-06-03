@@ -69,12 +69,12 @@ class Artist(db.Model):
     description = db.Column(db.String(500))
     upcoming_shows_count = db.Column(db.Integer, default=0)
     shows_count = db.Column(db.Integer, default=0)
-    shows = db.relationship('Show',backref='venue',lazy=True, cascade="save-update, merge, delete")
+    shows = db.relationship('Show',backref='artist',lazy=True, cascade="save-update, merge, delete")
 
   # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 class Show(db.Model):
-    _tablename__ = 'shows'
+    _tablename__ = 'show'
 
     id = db.Column(db.Integer, primary_key=True)
     venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
@@ -114,27 +114,24 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
+  data = []
+  venues = db.session.query(Venue.city,Venue.state).group_by(Venue.state,Venue.city).all()
+
+  for venue in venues:
+    get_venues = db.session.query(Venue.id, Venue.name, Venue.upcoming_shows_count).filter(Venue.city==venue[0], Venue.state==venue[1]).all()
+
+    data.append({
+        "city": venue[0],
+        "state": venue[1],
+        "venues": []
+    })
+    for venue in get_venues:
+      data[-1]["venues"].append({
+              "id": venue[0],
+              "name": venue[1],
+              "num_upcoming_shows":venue[2]
+      })
+
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
