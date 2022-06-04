@@ -170,20 +170,21 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
   venue = Venue.query.get(venue_id)
-  past_shows = []
-  upcoming_shows =[]
   get_shows = venue.shows
+  shows = []
+  upcoming_shows =[]
 
   for show in get_shows:
-    shows_info = {
+    data = {
       "artist_id": show.artist_id,
       "artist_name": show.artist.name,
-      "artist_image_link": show.artist.image_link
+      "artist_image_link": show.artist.image_link,
+      "start_time": str(show.start_time)
     }
     if(show.upcoming):
-      upcoming_shows.append(shows_info)
+      upcoming_shows.append(data)
     else:
-      past_shows.append(shows_info)
+      shows.append(data)
 
   data={
     "id": venue.id,
@@ -198,9 +199,9 @@ def show_venue(venue_id):
     "website_link": venue.website_link,
     "talent": venue.talent,
     "description": venue.description,
-    "past_shows": past_shows,
+    "past_shows": shows,
     "upcoming_shows": upcoming_shows,
-    "past_shows_count": len(past_shows),
+    "past_shows_count": len(shows),
     "upcoming_shows_count": len(upcoming_shows)
   }
   return render_template('pages/show_venue.html', venue=data)
@@ -249,7 +250,18 @@ def create_venue_submission():
 def delete_venue(venue_id):
   # TODO: Complete this endpoint for taking a venue_id, and using
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
-  
+  venue_id = request.form.get('venue_id')
+  deleted_venue = Venue.query.get(venue_id)
+  venueName = deleted_venue.name
+  try:
+    db.session.delete(deleted_venue)
+    db.session.commit()
+    flash('Venue ' + venueName + ' was successfully deleted!')
+  except:
+    db.session.rollback()
+    flash('please try again. Venue ' + venueName + ' could not be deleted.')
+  finally:
+    db.session.close()
   # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
   return None
